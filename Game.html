@@ -55,11 +55,11 @@
     position: absolute;
     width: 75px;
     height: 75px;
-    background-color: gray;
+    background-color: grey;
     top: 100px;
     left: 7px;
     border: lightgray solid 5px;
-    border-radius: 5px;
+    border-radius: 2px;
   }
 
   .Container {
@@ -101,37 +101,53 @@
     display: none;
   }
 
-  .AB {
-    height: 150px;
-    width: 150px;
-    background-color: #3e4247;
-    border-radius: 150px;
-    border-bottom: #de4a00 8px solid;
+  .meteor {
+    position: relative;
+    width: 100px;
+    height: 100px;
+  }
+
+  .fire {
+    position: absolute;
+    top: 0;
+    left: 25%;
+    width: 50%;
+    height: 70%;
+    background-color: orange;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  }
+
+  .rock {
     position: absolute;
     bottom: 0;
     left: 0;
+    width: 100%;
+    height: 60%;
+    background: gray;
+    border-radius: 50%;
+    box-shadow: inset -5px -5px 0px rgba(0, 0, 0, 0.3);
   }
 
-  .Fire1 {
+  .rock::before {
+    content: "";
     position: absolute;
-    height: 150px;
-    width: 10px;
-    bottom: 45px;
-    background-color: #de4a00;
-    left: 0;
-    border-radius: 25px;
-    border: none;
+    top: 20%;
+    left: 15%;
+    width: 15%;
+    height: 15%;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
   }
 
-  .Fire2 {
+  .rock::after {
+    content: "";
     position: absolute;
-    height: 150px;
-    width: 10px;
-    bottom: 50px;
-    background-color: #de4a00;
-    right: 0;
-    border-radius: 25px;
-    border: none;
+    top: 50%;
+    right: 20%;
+    width: 12%;
+    height: 12%;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
   }
 
   .Star {
@@ -144,7 +160,7 @@
   }
 
   body {
-    background-color: #1c1a19;
+    background-color: #000000;
   }
 
   /* Styling for the Game Over UI */
@@ -309,6 +325,7 @@
     height: 120px;
     animation: spin 2s linear infinite;
   }
+
   @keyframes spin {
     0% {
       transform: rotate(0deg);
@@ -317,6 +334,14 @@
     100% {
       transform: rotate(360deg);
     }
+  }
+
+  .Medkit {
+    color: red;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    font-size: 100px;
   }
 </style>
 
@@ -376,14 +401,16 @@
       <div class="Star" id="Star6"></div>
       <div class="Star" id="Star7"></div>
 
+      <div class="Medkit" id="Medkit">&hearts;</div>
+
 
 
     </div>
     <div class="astraroid" id="astaroid">
-      <div class="AB"></div>
-      <div class="Fire1"></div>
-      <div class="Fire2"></div>
+      <div class="fire"></div>
+      <div class="rock"></div>
     </div>
+    <div id="AstaroidContainer"></div>
   </div>
 
   <div class="MC" id="MobileControls">
@@ -418,9 +445,18 @@
     let movingUp = false;
     let movingDown = false;
 
-    let Coins = ["Coin1", "Coin2", "Coin3", "Star1", "Star2", "Star3", "Star4", "Star5", "Star6", "Star7"];
+    let Coins = ["Coin1", "Coin2", "Coin3", "Star1", "Star2", "Star3", "Star4", "Star5", "Star6", "Star7", "Medkit"];
+    let MedkitSpawned = false;
 
     function AnimateCoins() {
+      if (MedkitSpawned == false) {
+        if (hearts <= 2) {
+          if (Math.floor(Math.random() * 100) >= 98) {
+            document.getElementById("Medkit").style.display = "block";
+            MedkitSpawned = true;
+          }
+        }
+      }
       for (let i = 0; i < Coins.length; i++) {
         let Coin = document.getElementById(Coins[i]);
         // Update the coin's position
@@ -437,6 +473,10 @@
             Coin.style.top = "0px"
           }
           Coin.style.left = Math.floor(Math.random() * 100) + "%";
+          if (Coins[i] == "Medkit") {
+            Coin.style.display = "none";
+            MedkitSpawned = false;
+          }
         }
       }
     }
@@ -445,15 +485,21 @@
       let asteroid = document.getElementById("astaroid");
 
       // Check if the random chance occurs
-      if (Math.floor(Math.random() * 100) == 1) {
-        asteroid.style.display = "block"; // Show the asteroid
-        asteroid.style.left = Math.floor(Math.random() * 100) + "%"; // Random horizontal position
-        asteroid.style.top = "0px"; // Start at the top
+      if (Math.floor(Math.random() * 100) <= 3) {
+        let newAsteroid = asteroid.cloneNode(true)
+        const Container = document.getElementById("AstaroidContainer")
+        Container.appendChild(newAsteroid)
+        newAsteroid.style.display = "block"; // Show the asteroid
+        newAsteroid.style.left = Math.floor(Math.random() * 100) + "%"; // Random horizontal position
+        newAsteroid.style.top = "0px"; // Start at the top
 
         // Animate the asteroid downwards
         for (let i = 0; i < 1000; i++) {
           setTimeout(() => {
-            asteroid.style.top = i + "px"; // Move downward
+            newAsteroid.style.top = i + "px"; // Move downward
+            if (i == 999) {
+              newAsteroid.remove()
+            }
           }, i * 2 + 100); // Control the speed of the animation
         }
       }
@@ -568,47 +614,83 @@
           document.getElementById("Points").innerHTML = Points;
         }
       });
-      const astaroidRect = astaroid.getBoundingClientRect();
-      const spaceshipRect = spaceshipElement.getBoundingClientRect();
-      if (
-        astaroidRect.left < spaceshipRect.right &&
-        astaroidRect.right > spaceshipRect.left &&
-        astaroidRect.top < spaceshipRect.bottom &&
-        astaroidRect.bottom > spaceshipRect.top
-      ) {
+      const Astaroids = document.querySelectorAll(".astraroid");
 
+      for (let i = 0; i < Astaroids.length; ++i) {
+        const asteroidRect = Astaroids[i].getBoundingClientRect();
+        const spaceshipRect = spaceshipElement.getBoundingClientRect();
 
+        if (
+          asteroidRect.left < spaceshipRect.right &&
+          asteroidRect.right > spaceshipRect.left &&
+          asteroidRect.top < spaceshipRect.bottom &&
+          asteroidRect.bottom > spaceshipRect.top
+        ) {
+          console.log("Hi")
 
-        if (debounce == false) {
-          if (hearts == 3) {
-            document.getElementById("Heart3").style.color = "grey";
-            debounce = true;
-            setTimeout(() => {
-              debounce = false;
-            }, 1000);
+          if (debounce == false) {
+            if (hearts == 3) {
+              document.getElementById("Heart3").style.color = "grey";
+              debounce = true;
+              setTimeout(() => {
+                debounce = false;
+              }, 1000);
+            }
+            if (hearts == 2) {
+              document.getElementById("Heart2").style.color = "grey";
+              debounce = true;
+              setTimeout(() => {
+                debounce = false;
+              }, 1000);
+            }
+            if (hearts == 1) {
+              document.getElementById("Heart1").style.color = "grey";
+              debounce = true;
+              setTimeout(() => {
+                debounce = false;
+              }, 1000);
+              document.getElementById("Ui").style.display = "flex";
+              document.getElementById("container").style.display = "none";
+              document.getElementById("Score").innerHTML = Points;
+            }
+            hearts -= 1;
           }
+
+
+        }
+      }
+
+
+      const Medkit = document.getElementById("Medkit");
+      const MedkitRect = Medkit.getBoundingClientRect();
+      const spaceshipRect = spaceshipElement.getBoundingClientRect();
+
+      let Debounce2 = false;
+
+      if (
+        MedkitRect.left < spaceshipRect.right &&
+        MedkitRect.right > spaceshipRect.left &&
+        MedkitRect.top < spaceshipRect.bottom &&
+        MedkitRect.bottom > spaceshipRect.top
+      ) {
+        Medkit.style.display = "none";
+        MedkitSpawned = false;
+        if (debounce == false) {
           if (hearts == 2) {
-            document.getElementById("Heart2").style.color = "grey";
-            debounce = true;
-            setTimeout(() => {
-              debounce = false;
-            }, 1000);
+            document.getElementById("Heart3").style.color = "red";
+            hearts = 3;
           }
           if (hearts == 1) {
-            document.getElementById("Heart1").style.color = "grey";
-            debounce = true;
-            setTimeout(() => {
-              debounce = false;
-            }, 1000);
-            document.getElementById("Ui").style.display = "flex";
-            document.getElementById("container").style.display = "none";
-            document.getElementById("Score").innerHTML = Points;
+            document.getElementById("Heart2").style.color = "red";
+            hearts = 2;
           }
-          hearts -= 1;
+          debounce = true;
+          setTimeout(() => {
+            debounce = false;
+          }, 1000);
         }
-
-
       }
+
 
     }
 
@@ -621,7 +703,7 @@
       document.getElementById("Heart1").style.color = "red";
       document.getElementById("Heart2").style.color = "red";
       document.getElementById("Heart3").style.color = "red";
-      
+
       document.getElementById("Spaceship").style.left = "50%"
       document.getElementById("Spaceship").style.top = "300px"
     }
