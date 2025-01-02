@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <title>replit</title>
+  <title>Made by kaboomcrew</title>
   <link href="style.css" rel="stylesheet" type="text/css" />
 </head>
 <style>
@@ -280,22 +280,72 @@
       padding: 8px 15px;
     }
   }
+
   .Control {
-    user-select: none; 
+    user-select: none;
+  }
+
+  .Hearts {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .Heart {
+    color: red;
+    font-size: 50px;
+  }
+
+  .loader {
+    border: 16px solid #f3f3f3;
+    border-top: 16px solid #ff4e4e;
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+  }
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
   }
 </style>
 
 <body>
+  <div style="display: flex;" class="UiMain" id="Loader">
+    <div class="loader"></div>
+    <h3>
+      Loading...
+      (approx: 10 seconds)
+    </h3>
+    <h3>
+      Tip: Use the arrow keys to move!
+    </h3>
+  </div>
   <div id="Ui" class="UiMain">
     <h2>You Died</h2>
     <h3>Score: <span id="Score">0</span></h3>
     <button onclick="Replay()">Play Again</button>
   </div>
+  <div id="UiStart" class="UiMain">
+    <h2>The spaceship game!</h2>
+    <h3>How many coins can you collect without crashing into the astaroids!</h3>
+    <button onclick="Replay()">Play</button>
+  </div>
 
 
-  <div class="Container" id="container">
+  <div style="display: none;" class="Container" id="container">
     <span
-      style="width: 60px; height: 15px; background-color: white; border-raduis: 5px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen;">
+      style="width: 60px; height: 15px; background-color: white; border-radius: 5px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen;">
       <a class="Point">Points: <a id="Points"></a></a>
     </span>
 
@@ -338,17 +388,31 @@
 
   <div class="MC" id="MobileControls">
     <div class="BR" id="Row">
-      <button  oncontextmenu="return false;" class="Control" id="AU">&#11165</button>
+      <button oncontextmenu="return false;" class="Control" id="AU">&#11165;</button>
     </div>
     <div id="Row">
-      <button  oncontextmenu="return false;" class="Control" id="AL">&#11164</button>
-      <button  oncontextmenu="return false;" class="Control" id="AD">&#11167</button>
-      <button  oncontextmenu="return false;" class="Control" id="AR">&#11166</button>
+      <button oncontextmenu="return false;" class="Control" id="AL">&#11164;</button>
+      <button oncontextmenu="return false;" class="Control" id="AD">&#11167;</button>
+      <button oncontextmenu="return false;" class="Control" id="AR">&#11166;</button>
     </div>
+  </div>
+
+  <div id="Hearts" class="Hearts">
+    <div class="Heart" id="Heart1">&hearts;</div>
+    <div class="Heart" id="Heart2">&hearts;</div>
+    <div class="Heart" id="Heart3">&hearts;</div>
   </div>
 
 
   <script>
+    /* Loading Symbol at start */
+    setTimeout(() => {
+      document.getElementById("Loader").style.display = "none";
+      document.getElementById("UiStart").style.display = "flex";
+    }, 10000);
+
+
+    var hearts = 3;
     let movingLeft = false;
     let movingRight = false;
     let movingUp = false;
@@ -401,11 +465,11 @@
     const Controls = document.getElementById("MobileControls");
     Controls.style.display = "none";
 
-    addEventListener('touchstart', function(event) {
+    addEventListener('touchstart', function (event) {
       Controls.style.display = "flex";
     });
 
-    addEventListener('keydown', function(event) {
+    addEventListener('keydown', function (event) {
       Controls.style.display = "none";
     });
 
@@ -479,6 +543,8 @@
 
     var Points = 0;
 
+    let debounce = false;
+
     function checkCoinCollision() {
       const coinElements = document.querySelectorAll('.Coin');
       const spaceshipElement = document.getElementById('Spaceship');
@@ -510,9 +576,37 @@
         astaroidRect.top < spaceshipRect.bottom &&
         astaroidRect.bottom > spaceshipRect.top
       ) {
-        document.getElementById("Ui").style.display = "flex";
-        document.getElementById("container").style.display = "none";
-        document.getElementById("Score").innerHTML = Points;
+
+
+
+        if (debounce == false) {
+          if (hearts == 3) {
+            document.getElementById("Heart3").style.color = "grey";
+            debounce = true;
+            setTimeout(() => {
+              debounce = false;
+            }, 1000);
+          }
+          if (hearts == 2) {
+            document.getElementById("Heart2").style.color = "grey";
+            debounce = true;
+            setTimeout(() => {
+              debounce = false;
+            }, 1000);
+          }
+          if (hearts == 1) {
+            document.getElementById("Heart1").style.color = "grey";
+            debounce = true;
+            setTimeout(() => {
+              debounce = false;
+            }, 1000);
+            document.getElementById("Ui").style.display = "flex";
+            document.getElementById("container").style.display = "none";
+            document.getElementById("Score").innerHTML = Points;
+          }
+          hearts -= 1;
+        }
+
 
       }
 
@@ -520,8 +614,16 @@
 
     function Replay() {
       document.getElementById("Ui").style.display = "none";
+      document.getElementById("UiStart").style.display = "none";
       document.getElementById("container").style.display = "block";
       Points = 0;
+      hearts = 3;
+      document.getElementById("Heart1").style.color = "red";
+      document.getElementById("Heart2").style.color = "red";
+      document.getElementById("Heart3").style.color = "red";
+      
+      document.getElementById("Spaceship").style.left = "50%"
+      document.getElementById("Spaceship").style.top = "300px"
     }
 
     setInterval(checkCoinCollision, 10);
@@ -530,17 +632,17 @@
 
     // Detect when the button is pushed down
     AU.addEventListener('touchstart', () => {
-        movingUp = true;
+      movingUp = true;
     });
 
     // Detect when the button is released
     AU.addEventListener('touchend', () => {
       movingUp = false;
     });
-    
+
     const AL = document.getElementById('AL');
     AL.addEventListener('touchstart', () => {
-        movingLeft = true;
+      movingLeft = true;
     });
 
     AL.addEventListener('touchend', () => {
@@ -548,14 +650,14 @@
     });
     const AD = document.getElementById('AD');
     AD.addEventListener('touchstart', () => {
-        movingDown = true;
+      movingDown = true;
     });
     AD.addEventListener('touchend', () => {
       movingDown = false;
     });
     const AR = document.getElementById('AR');
     AR.addEventListener('touchstart', () => {
-        movingRight = true;
+      movingRight = true;
     });
     AR.addEventListener('touchend', () => {
       movingRight = false;
